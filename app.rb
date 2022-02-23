@@ -40,7 +40,6 @@ class App
     body = ''
 
     if time_formatter.success?
-      status = 200
       body = time_formatter.time_string
     else
       status = 400
