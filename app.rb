@@ -36,15 +36,8 @@ class App
 
   def request_time(string)
     time_formatter = TimeFormatter.new(string)
-    status = 200
-    body = ''
-
-    if time_formatter.success?
-      body = time_formatter.time_string
-    else
-      status = 400
-      body = time_formatter.invalid_string
-    end
+    status = time_formatter.success? ? 200 : 400
+    body = time_formatter.call
 
     [status, body]
   end

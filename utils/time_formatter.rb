@@ -12,6 +12,10 @@ class TimeFormatter
     @query_string = query_string
   end
 
+  def call
+    success? ? time_string : invalid_string
+  end
+
   def success?
     (@query_string.scan(/\w+/) - TIME_FORMAT.keys.map(&:to_s)).empty?
   end
