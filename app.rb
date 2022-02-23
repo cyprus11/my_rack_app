@@ -1,9 +1,10 @@
 class App
   ALLOW_PATH = "/time"
+  ALLOW_REQUEST_PREFIX = 'format='
 
   def call(env)
-    handle_request(env)
-    response
+    status, body = handle_request(env)
+    response(status, body)
   end
 
   private
@@ -13,52 +14,43 @@ class App
   end
 
   def handle_request(env)
-    return unless handle_path(env)
+    return wrong_path if env['REQUEST_PATH'] != ALLOW_PATH
+    return wrong_request unless env['QUERY_STRING'].start_with?(ALLOW_REQUEST_PREFIX)
 
-    handle_query_string(env["QUERY_STRING"])
+    request_time(env['QUERY_STRING'].delete_prefix(ALLOW_REQUEST_PREFIX))
   end
 
-  def handle_path(env)
-    if env["PATH_INFO"] != ALLOW_PATH
-      @status = 404
-      return false
-    end
+  def wrong_path
+    status = 404
+    body = "Wrong path\n"
 
-    true
+    [status, body]
   end
 
-  def handle_query_string(query_string)
-    if query_string.start_with?("format=")
-      @query_attributes = query_string.delete_prefix("format=")
-      handle_attributes(@query_attributes)
+  def wrong_request
+    status = 400
+    body = "Wrong request\n"
+
+    [status, body]
+  end
+
+  def request_time(string)
+    time_formatter = TimeFormatter.new(string)
+    status = 200
+    body = ''
+
+    if time_formatter.success?
+      status = 200
+      body = time_formatter.time_string
     else
-      @status = 400
+      status = 400
+      body = "Unknown time format [#{time_formatter.invalid_string.join(', ')}]\n"
     end
+
+    [status, body]
   end
 
-  def handle_attributes(query_attributes)
-    @prevent_attributes = query_attributes.scan(/\w+/) - TimeFormatter::TIME_FORMAT.keys.map(&:to_s)
-
-    if @prevent_attributes.any?
-      @status = 400
-    else
-      @status = 200
-    end
-  end
-
-  def body
-    if @status == 404
-      "Wrong path\n"
-    elsif @status == 400 && @prevent_attributes.any?
-      "Unknown time format [#{@prevent_attributes.join(", ")}]\n"
-    elsif @status == 400
-      "Wrong request\n"
-    else
-      TimeFormatter.time_by_format(@query_attributes)
-    end
-  end
-
-  def response
-    Rack::Response.new(body, @status, headers).finish
+  def response(status, body)
+    Rack::Response.new(body, status, headers).finish
   end
 end

@@ -1,4 +1,4 @@
-module TimeFormatter
+class TimeFormatter
   TIME_FORMAT = {
     year: '%Y',
     month: '%m',
@@ -8,12 +8,25 @@ module TimeFormatter
     second: '%S'
   }
 
-  def self.time_by_format(query_attributes)
-    TIME_FORMAT.keys.each do |key|
-      query_attributes.gsub!(key.to_s, TIME_FORMAT[key])
-    end
-    query_attributes += "\n"
-
-    Time.new.strftime(query_attributes)
+  def initialize(query_string)
+    @query_string = query_string
   end
+
+  def success?
+    (@query_string.scan(/\w+/) - TIME_FORMAT.keys.map(&:to_s)).empty?
+  end
+
+  def time_string
+    TIME_FORMAT.keys.each do |key|
+      @query_string.gsub!(key.to_s, TIME_FORMAT[key])
+    end
+    @query_string += "\n"
+
+    Time.new.strftime(@query_string)
+  end
+
+  def invalid_string
+    @query_string.scan(/\w+/) - TIME_FORMAT.keys.map(&:to_s)
+  end
+
 end
