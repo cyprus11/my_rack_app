@@ -26,7 +26,8 @@ class TimeFormatter
   end
 
   def invalid_string
-    @query_string.scan(/\w+/) - TIME_FORMAT.keys.map(&:to_s)
+    invalid_attr = @query_string.scan(/\w+/) - TIME_FORMAT.keys.map(&:to_s)
+    "Unknown time format [#{invalid_attr.join(', ')}]\n"
   end
 
 end

@@ -43,7 +43,7 @@ class App
       body = time_formatter.time_string
     else
       status = 400
-      body = "Unknown time format [#{time_formatter.invalid_string.join(', ')}]\n"
+      body = time_formatter.invalid_string
     end
 
     [status, body]
